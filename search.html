@@ -6,18 +6,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Recipe Search | Nermeen Bolous</title>
     <style>
-        /* Matching your portfolio's theme */
         body { font-family: Arial, sans-serif; line-height: 1.6; margin: 0; padding: 0; color: #333; background: #f4f4f4; }
         header { background: #2c3e50; color: white; padding: 2rem; text-align: center; }
         .container { width: 80%; margin: 20px auto; overflow: hidden; background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
         
-        /* Search UI Styles */
+      
         .search-box { display: flex; gap: 10px; margin-bottom: 20px; }
         input { flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 4px; }
         button { padding: 10px 20px; background: #2c3e50; color: white; border: none; cursor: pointer; border-radius: 4px; }
         button:hover { background: #1a252f; }
         
-        /* Result Card Styles */
         #status { font-weight: bold; margin-bottom: 15px; }
         .results-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; }
         .meal-card { border: 1px solid #ddd; padding: 15px; border-radius: 8px; text-align: center; background: #fff; }
@@ -45,7 +43,61 @@
 </main>
 
 <script>
-    // JavaScript Logic will go here (Step 3)
+   const searchBtn = document.getElementById("searchBtn");
+const searchInput = document.getElementById("searchInput");
+const status = document.getElementById("status");
+const results = document.getElementById("results");
+
+searchBtn.addEventListener("click", runSearch);
+
+async function runSearch() {
+    const term = searchInput.value.trim();
+
+   
+    if (!term) {
+        status.textContent = "Please enter a search term.";
+        results.innerHTML = "";
+        return;
+    }
+
+    
+    status.textContent = "Searching for recipes...";
+    results.innerHTML = "";
+
+    try {
+        
+        const url = `https://www.themealdb.com/api/json/v1/1/search.php?s=${encodeURIComponent(term)}`;
+        const response = await fetch(url);
+
+        if (!response.ok) {
+            throw new Error(`HTTP error: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        
+        if (!data.meals) {
+            status.textContent = "No recipes found. Try another ingredient!";
+            return;
+        }
+
+        // 5. Display results
+        status.textContent = `Found ${data.meals.length} result(s).`;
+        results.innerHTML = data.meals.map(meal => `
+            <div class="meal-card">
+                <h3>${meal.strMeal}</h3>
+                <p><strong>Category:</strong> ${meal.strCategory}</p>
+                <p><strong>Region:</strong> ${meal.strArea}</p>
+                <img src="${meal.strMealThumb}" alt="${meal.strMeal}">
+            </div>
+        `).join("");
+
+    } catch (error) {
+        
+        status.textContent = "Something went wrong. Please check your connection and try again.";
+        console.error(error);
+    }
+}
 </script>
 
 </body>
