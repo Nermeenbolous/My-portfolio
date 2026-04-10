@@ -26,51 +26,58 @@
 
     <p id="status"></p> <div id="results"></div> <a href="index.html" class="back-link">← Back to My Portfolio</a>
 </div>
-
 <script>
-const searchBtn = document.getElementById("searchBtn");
-const searchInput = document.getElementById("searchInput");
-const status = document.getElementById("status");
-const results = document.getElementById("results");
+    const searchBtn = document.getElementById("searchBtn");
+    const searchInput = document.getElementById("searchInput");
+    const status = document.getElementById("status");
+    const results = document.getElementById("results");
 
-searchBtn.addEventListener("click", async () => {
-    const term = searchInput.value.trim();
+    searchBtn.addEventListener("click", runSearch);
 
-    // 1. Error handling for empty search
-    if (!term) {
-        status.textContent = "Please type a word first.";
-        return;
-    }
+    async function runSearch() {
+        const term = searchInput.value.trim();
 
-    // 2. Loading State
-    status.textContent = "Loading recipes...";
-    results.innerHTML = "";
-
-    try {
-        // 3. Fetching the data
-        const response = await fetch(`https://www.themealdb.com/api/json/v1/1/search.php?s=${term}`);
-        const data = await response.json();
-
-        if (!data.meals) {
-            status.textContent = "No recipes found. Try another word!";
-        } else {
-            status.textContent = `Found ${data.meals.length} recipes!`;
-            
-            // 4. Displaying the results
-            data.meals.forEach(meal => {
-                results.innerHTML += `
-                    <div class="card">
-                        <img src="${meal.strMealThumb}">
-                        <h3>${meal.strMeal}</h3>
-                        <p>Category: ${meal.strCategory}</p>
-                        <p>Area: ${meal.strArea}</p>
-                    </div>`;
-            });
+        // Requirement: Handle blank input
+        if (!term) {
+            status.textContent = "Please enter a search term.";
+            results.innerHTML = "";
+            return;
         }
-    } catch (error) {
-        status.textContent = "Something went wrong. Check your connection.";
-    }
-});</script>
 
+        // Requirement: Show loading state
+        status.textContent = "Searching for recipes...";
+        results.innerHTML = "";
+
+        try {
+            // Requirement: Use fetch with async/await and query parameters
+            const url = `https://www.themealdb.com/api/json/v1/1/search.php?s=${encodeURIComponent(term)}`;
+            const response = await fetch(url);
+
+            if (!response.ok) {
+                throw new Error(`HTTP error: ${response.status}`);
+            }
+
+            const data = await response.json();
+
+            // Handle cases where no recipes are found
+            if (!data.meals) {
+                status.textContent = "No recipes found. Try another ingredient!";
+                return;
+            }
+
+            // Requirement: Display at least 3 pieces of information
+            status.textContent = `Found ${data.meals.length} result(s).`;
+            results.innerHTML = data.meals.map(meal => `
+                <div class="meal-card">
+                    <h3>${meal.strMeal}</h3> <p><strong>Category:</strong> ${meal.strCategory}</p> <p><strong>Region:</strong> ${meal.strArea}</p> <img src="${meal.strMealThumb}" alt="${meal.strMeal}" width="200"> </div>
+            `).join("");
+
+        } catch (error) {
+            // Requirement: Show error state
+            status.textContent = "Something went wrong. Please check your connection and try again.";
+            console.error(error);
+        }
+    }
+</script>
 </body>
 </html>
