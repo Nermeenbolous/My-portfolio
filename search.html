@@ -2,30 +2,45 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Recipe Search | Nermeen Bolous</title>
     <style>
-        /* This makes your page look professional */
-        body { font-family: Arial; background: #f4f4f4; text-align: center; padding: 20px; }
-        .container { background: white; max-width: 800px; margin: auto; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-        input { padding: 10px; width: 60%; border: 1px solid #ccc; border-radius: 5px; }
-        button { padding: 10px 20px; background: #2c3e50; color: white; border: none; border-radius: 5px; cursor: pointer; }
-        #results { display: flex; flex-wrap: wrap; justify-content: center; margin-top: 20px; }
-        .meal-card { border: 1px solid #ddd; margin: 10px; padding: 10px; width: 200px; border-radius: 8px; background: #fff; }
-        img { width: 100%; border-radius: 5px; }
-        .back-link { display: block; margin-top: 20px; text-decoration: none; color: #2c3e50; font-weight: bold; }
+        body { font-family: Arial, sans-serif; background: #f4f4f4; text-align: center; padding: 20px; }
+        .container { background: white; max-width: 900px; margin: auto; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        h1 { color: #2c3e50; }
+        
+        .search-area { margin: 25px 0; }
+        input { padding: 12px; width: 60%; border: 2px solid #ddd; border-radius: 6px; font-size: 1rem; }
+        button { padding: 12px 25px; background: #2c3e50; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        button:hover { background: #1a252f; }
+        
+        #status { font-weight: bold; margin: 15px 0; color: #555; }
+        #results { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-top: 20px; }
+        
+        .meal-card { background: #fff; border: 1px solid #eee; padding: 15px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .meal-card img { width: 100%; border-radius: 8px; margin-bottom: 10px; }
+        .meal-card h3 { margin: 10px 0; font-size: 1.1rem; color: #2c3e50; }
+        
+        .back-btn { display: inline-block; margin-top: 30px; text-decoration: none; color: #2c3e50; font-weight: bold; border-bottom: 2px solid #2c3e50; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <h1>Recipe Finder</h1>
-    <p>Search for a meal (like "pasta" or "chicken") to see details from the API.</p>
-    
-    <input type="text" id="searchInput" placeholder="Type here...">
-    <button id="searchBtn">Search</button>
+    <p>Enter an ingredient or meal name to find real-time recipes using a public API.</p>
 
-    <p id="status"></p> <div id="results"></div> <a href="index.html" class="back-link">← Back to My Portfolio</a>
+    <div class="search-area">
+        <input type="text" id="searchInput" placeholder="Search (e.g., Chicken, Pasta, Cake)...">
+        <button id="searchBtn">Search</button>
+    </div>
+
+    <p id="status"></p>
+    <div id="results"></div>
+
+    <a href="index.html" class="back-btn">← Back to Portfolio</a>
 </div>
+
 <script>
     const searchBtn = document.getElementById("searchBtn");
     const searchInput = document.getElementById("searchInput");
@@ -37,47 +52,52 @@
     async function runSearch() {
         const term = searchInput.value.trim();
 
-        // Requirement: Handle blank input
+        // 1. Handle blank input
         if (!term) {
-            status.textContent = "Please enter a search term.";
+            status.textContent = "⚠️ Please enter a search term.";
             results.innerHTML = "";
             return;
         }
 
-        // Requirement: Show loading state
-        status.textContent = "Searching for recipes...";
+        // 2. Show loading state
+        status.textContent = "⏳ Searching for delicious recipes...";
         results.innerHTML = "";
 
         try {
-            // Requirement: Use fetch with async/await and query parameters
+            // 3. API Request using fetch and async/await
             const url = `https://www.themealdb.com/api/json/v1/1/search.php?s=${encodeURIComponent(term)}`;
             const response = await fetch(url);
 
             if (!response.ok) {
-                throw new Error(`HTTP error: ${response.status}`);
+                throw new Error("Could not connect to the API.");
             }
 
             const data = await response.json();
 
-            // Handle cases where no recipes are found
+            // 4. Handle no results found
             if (!data.meals) {
-                status.textContent = "No recipes found. Try another ingredient!";
+                status.textContent = "❌ No results found. Try searching for something else!";
                 return;
             }
 
-            // Requirement: Display at least 3 pieces of information
-            status.textContent = `Found ${data.meals.length} result(s).`;
+            // 5. Display 3+ pieces of info (Name, Category, Area, Image)
+            status.textContent = `✅ Found ${data.meals.length} result(s) for "${term}":`;
             results.innerHTML = data.meals.map(meal => `
                 <div class="meal-card">
-                    <h3>${meal.strMeal}</h3> <p><strong>Category:</strong> ${meal.strCategory}</p> <p><strong>Region:</strong> ${meal.strArea}</p> <img src="${meal.strMealThumb}" alt="${meal.strMeal}" width="200"> </div>
+                    <img src="${meal.strMealThumb}" alt="${meal.strMeal}">
+                    <h3>${meal.strMeal}</h3>
+                    <p><strong>Category:</strong> ${meal.strCategory}</p>
+                    <p><strong>Origin:</strong> ${meal.strArea}</p>
+                </div>
             `).join("");
 
         } catch (error) {
-            // Requirement: Show error state
-            status.textContent = "Something went wrong. Please check your connection and try again.";
+            // 6. Handle error state
+            status.textContent = "⚠️ Something went wrong. Please check your internet and try again.";
             console.error(error);
         }
     }
 </script>
+
 </body>
 </html>
