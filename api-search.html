@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nermeen Bolous | Recipe Search</title>
+    <style>
+        /* Consistently using your portfolio's CSS */
+        body { font-family: Arial, sans-serif; line-height: 1.6; margin: 0; padding: 0; color: #333; background: #f4f4f4; scroll-behavior: smooth; }
+        header { background: #2c3e50; color: white; padding: 2rem; text-align: center; }
+        nav { background: #34495e; padding: 10px; text-align: center; position: sticky; top: 0; z-index: 1000; }
+        nav a { color: white; margin: 0 15px; text-decoration: none; font-weight: bold; }
+        .container { width: 85%; max-width: 1000px; margin: 20px auto; background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        
+        /* Search UI Styles */
+        .search-section { text-align: center; margin-bottom: 30px; }
+        input { padding: 10px; width: 60%; border: 1px solid #ccc; border-radius: 4px; font-size: 1rem; }
+        button { padding: 10px 20px; background: #2c3e50; color: white; border: none; cursor: pointer; border-radius: 4px; font-size: 1rem; }
+        button:hover { background: #1a252f; }
+        #status { margin: 15px 0; font-weight: bold; }
+        
+        /* Grid for results (Using your project-card style) */
+        #results { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
+        .recipe-card { background: #fff; border: 1px solid #ddd; padding: 20px; border-radius: 5px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .recipe-card img { width: 100%; border-radius: 5px; height: 200px; object-fit: cover; margin-bottom: 10px; }
+        footer { background: #2c3e50; color: white; text-align: center; padding: 2rem; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Nermeen Bolous</h1>
+        <p>IT-Web Design Specialist | Recipe Search Project</p>
+    </header>
+
+    <nav>
+        <a href="index.html">Main Portfolio</a>
+    </nav>
+
+    <main class="container">
+        <section class="search-section">
+            <h2>Recipe Discovery</h2>
+            <p>Type a food name (like "Apple" or "Beef") to see data from a public API.</p>
+            <input type="text" id="searchInput" placeholder="Search for a recipe...">
+            <button id="searchBtn">Search</button>
+            <div id="status"></div>
+        </section>
+
+        <div id="results"></div>
+    </main>
+
+    <footer>
+        <p>&copy; 2026 Nermeen Bolous. All rights reserved.</p>
+    </footer>
+
+    <script>
+        // JS logic included here for simplicity in one file
+        const searchBtn = document.getElementById("searchBtn");
+        const searchInput = document.getElementById("searchInput");
+        const status = document.getElementById("status");
+        const results = document.getElementById("results");
+
+        searchBtn.addEventListener("click", runSearch);
+
+        async function runSearch() {
+            const term = searchInput.value.trim();
+
+            // Handle blank input
+            if (!term) {
+                status.textContent = "Please enter a search term.";
+                results.innerHTML = "";
+                return;
+            }
+
+            // Show loading state
+            status.textContent = "Loading results...";
+            results.innerHTML = "";
+
+            try {
+                // Build API URL
+                const url = `https://www.themealdb.com/api/json/v1/1/search.php?s=${encodeURIComponent(term)}`;
+                const response = await fetch(url);
+
+                if (!response.ok) {
+                    throw new Error("Network response was not ok");
+                }
+
+                const data = await response.json();
+
+                // Handle no results
+                if (!data.meals) {
+                    status.textContent = "No results found. Please try another search.";
+                    return;
+                }
+
+                status.textContent = `Found ${data.meals.length} recipes.`;
+
+                // Display 3+ pieces of data: Title, Category, Area, and Image
+                results.innerHTML = data.meals.map(meal => `
+                    <div class="recipe-card">
+                        <img src="${meal.strMealThumb}" alt="${meal.strMeal}">
+                        <h3>${meal.strMeal}</h3>
+                        <p><strong>Category:</strong> ${meal.strCategory}</p>
+                        <p><strong>Origin:</strong> ${meal.strArea}</p>
+                    </div>
+                `).join("");
+
+            } catch (error) {
+                // Handle error state
+                status.textContent = "An error occurred. Please try again later.";
+                console.error(error);
+            }
+        }
+    </script>
+</body>
+</html>
