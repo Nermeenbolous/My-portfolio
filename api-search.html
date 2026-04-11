@@ -5,22 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Nermeen Bolous | Recipe Search</title>
     <style>
-        /* Consistently using your portfolio's CSS */
-        body { font-family: Arial, sans-serif; line-height: 1.6; margin: 0; padding: 0; color: #333; background: #f4f4f4; scroll-behavior: smooth; }
+        /* Using your exact portfolio colors and fonts */
+        body { font-family: Arial, sans-serif; line-height: 1.6; margin: 0; padding: 0; color: #333; background: #f4f4f4; }
         header { background: #2c3e50; color: white; padding: 2rem; text-align: center; }
         nav { background: #34495e; padding: 10px; text-align: center; position: sticky; top: 0; z-index: 1000; }
         nav a { color: white; margin: 0 15px; text-decoration: none; font-weight: bold; }
         .container { width: 85%; max-width: 1000px; margin: 20px auto; background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
         
-        /* Search UI Styles */
+        /* Search UI Section */
         .search-section { text-align: center; margin-bottom: 30px; }
         input { padding: 10px; width: 60%; border: 1px solid #ccc; border-radius: 4px; font-size: 1rem; }
         button { padding: 10px 20px; background: #2c3e50; color: white; border: none; cursor: pointer; border-radius: 4px; font-size: 1rem; }
         button:hover { background: #1a252f; }
-        #status { margin: 15px 0; font-weight: bold; }
+        #status { margin: 15px 0; font-weight: bold; min-height: 24px; }
         
-        /* Grid for results (Using your project-card style) */
-        #results { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
+        /* Results Grid */
+        #results { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-top: 20px; }
         .recipe-card { background: #fff; border: 1px solid #ddd; padding: 20px; border-radius: 5px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .recipe-card img { width: 100%; border-radius: 5px; height: 200px; object-fit: cover; margin-bottom: 10px; }
         footer { background: #2c3e50; color: white; text-align: center; padding: 2rem; margin-top: 20px; }
@@ -39,8 +39,8 @@
     <main class="container">
         <section class="search-section">
             <h2>Recipe Discovery</h2>
-            <p>Type a food name (like "Apple" or "Beef") to see data from a public API.</p>
-            <input type="text" id="searchInput" placeholder="Search for a recipe...">
+            <p>Type a food name to pull data from a public API.</p>
+            <input type="text" id="searchInput" placeholder="Search for a recipe (e.g. Pizza)...">
             <button id="searchBtn">Search</button>
             <div id="status"></div>
         </section>
@@ -52,60 +52,65 @@
         <p>&copy; 2026 Nermeen Bolous. All rights reserved.</p>
     </footer>
 
-   <script>
-    const searchBtn = document.getElementById("searchBtn");
-    const searchInput = document.getElementById("searchInput");
-    const status = document.getElementById("status");
-    const results = document.getElementById("results");
+    <script>
+        const searchBtn = document.getElementById("searchBtn");
+        const searchInput = document.getElementById("searchInput");
+        const status = document.getElementById("status");
+        const results = document.getElementById("results");
 
-    searchBtn.addEventListener("click", runSearch);
+        searchBtn.addEventListener("click", runSearch);
 
-    async function runSearch() {
-        const term = searchInput.value.trim();
+        async function runSearch() {
+            const term = searchInput.value.trim();
 
-        if (!term) {
-            status.textContent = "Please enter a search term.";
-            results.innerHTML = "";
-            return;
-        }
-
-        status.textContent = "Loading recipes...";
-        results.innerHTML = "";
-
-        try {
-            // Ensure HTTPS is used here
-            const url = `https://www.themealdb.com/api/json/v1/1/search.php?s=${encodeURIComponent(term)}`;
-            const response = await fetch(url);
-
-            if (!response.ok) {
-                throw new Error("Network response was not ok");
-            }
-
-            const data = await response.json();
-
-            if (!data.meals) {
-                status.textContent = "No results found. Try another food!";
+            // 1. Handle blank input
+            if (!term) {
+                status.textContent = "Please enter a search term.";
+                results.innerHTML = "";
                 return;
             }
 
-            status.textContent = `Found ${data.meals.length} recipes.`;
+            // 2. Clear results and show loading
+            status.textContent = "Searching for recipes...";
+            results.innerHTML = "";
 
-            results.innerHTML = data.meals.map(meal => `
-                <div class="recipe-card">
-                    <img src="${meal.strMealThumb}" alt="${meal.strMeal}">
-                    <h3>${meal.strMeal}</h3>
-                    <p><strong>Category:</strong> ${meal.strCategory}</p>
-                    <p><strong>Origin:</strong> ${meal.strArea}</p>
-                </div>
-            `).join("");
+            try {
+                // 3. Build API URL with HTTPS
+                const url = `https://www.themealdb.com/api/json/v1/1/search.php?s=${encodeURIComponent(term)}`;
+                
+                // 4. Fetch the data
+                const response = await fetch(url);
 
-        } catch (error) {
-            // This is what you are seeing now. 
-            // Logging the error to the console helps find the exact cause.
-            status.textContent = "An error occurred. Please check your connection.";
-            console.error("API Error Detail:", error);
+                if (!response.ok) {
+                    throw new Error("Connection error");
+                }
+
+                const data = await response.json();
+
+                // 5. Check if results exist
+                if (!data.meals) {
+                    status.textContent = "No recipes found. Try searching for 'Chicken' or 'Cake'.";
+                    return;
+                }
+
+                status.textContent = `Found ${data.meals.length} result(s).`;
+
+                // 6. Display the data
+                results.innerHTML = data.meals.map(meal => `
+                    <div class="recipe-card">
+                        <img src="${meal.strMealThumb}" alt="${meal.strMeal}">
+                        <h3>${meal.strMeal}</h3>
+                        <p><strong>Category:</strong> ${meal.strCategory}</p>
+                        <p><strong>Origin:</strong> ${meal.strArea}</p>
+                    </div>
+                `).join("");
+
+            } catch (err) {
+                // 7. Error handling
+                status.textContent = "Something went wrong. Check your internet or code.";
+                console.error("The error was:", err);
+            }
         }
-    }
-</script>
+    </script>
 </body>
 </html>
