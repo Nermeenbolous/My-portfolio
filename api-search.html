@@ -78,8 +78,9 @@
 
         try {
             // Using a timestamp (?t=) helps bypass some browser security/cache blocks
-            const apiURL =  https://www.themealdb.com/api/json/v1/1/search.php?s=chicken
-            `${encodeURIComponent(term)}&t=${Date.now()}`;
+            
+            const url = `https://www.themealdb.com/api/json/v1/1/search.php?s=${encodeURIComponent(term)}`;
+
            
             const response = await fetch(apiURL, {
                 method: 'GET',
