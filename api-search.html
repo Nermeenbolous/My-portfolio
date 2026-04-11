@@ -52,64 +52,60 @@
         <p>&copy; 2026 Nermeen Bolous. All rights reserved.</p>
     </footer>
 
-    <script>
-        // JS logic included here for simplicity in one file
-        const searchBtn = document.getElementById("searchBtn");
-        const searchInput = document.getElementById("searchInput");
-        const status = document.getElementById("status");
-        const results = document.getElementById("results");
+   <script>
+    const searchBtn = document.getElementById("searchBtn");
+    const searchInput = document.getElementById("searchInput");
+    const status = document.getElementById("status");
+    const results = document.getElementById("results");
 
-        searchBtn.addEventListener("click", runSearch);
+    searchBtn.addEventListener("click", runSearch);
 
-        async function runSearch() {
-            const term = searchInput.value.trim();
+    async function runSearch() {
+        const term = searchInput.value.trim();
 
-            // Handle blank input
-            if (!term) {
-                status.textContent = "Please enter a search term.";
-                results.innerHTML = "";
+        if (!term) {
+            status.textContent = "Please enter a search term.";
+            results.innerHTML = "";
+            return;
+        }
+
+        status.textContent = "Loading recipes...";
+        results.innerHTML = "";
+
+        try {
+            // Ensure HTTPS is used here
+            const url = `https://www.themealdb.com/api/json/v1/1/search.php?s=${encodeURIComponent(term)}`;
+            const response = await fetch(url);
+
+            if (!response.ok) {
+                throw new Error("Network response was not ok");
+            }
+
+            const data = await response.json();
+
+            if (!data.meals) {
+                status.textContent = "No results found. Try another food!";
                 return;
             }
 
-            // Show loading state
-            status.textContent = "Loading results...";
-            results.innerHTML = "";
+            status.textContent = `Found ${data.meals.length} recipes.`;
 
-            try {
-                // Build API URL
-                const url = `https://www.themealdb.com/api/json/v1/1/search.php?s=${encodeURIComponent(term)}`;
-                const response = await fetch(url);
+            results.innerHTML = data.meals.map(meal => `
+                <div class="recipe-card">
+                    <img src="${meal.strMealThumb}" alt="${meal.strMeal}">
+                    <h3>${meal.strMeal}</h3>
+                    <p><strong>Category:</strong> ${meal.strCategory}</p>
+                    <p><strong>Origin:</strong> ${meal.strArea}</p>
+                </div>
+            `).join("");
 
-                if (!response.ok) {
-                    throw new Error("Network response was not ok");
-                }
-
-                const data = await response.json();
-
-                // Handle no results
-                if (!data.meals) {
-                    status.textContent = "No results found. Please try another search.";
-                    return;
-                }
-
-                status.textContent = `Found ${data.meals.length} recipes.`;
-
-                // Display 3+ pieces of data: Title, Category, Area, and Image
-                results.innerHTML = data.meals.map(meal => `
-                    <div class="recipe-card">
-                        <img src="${meal.strMealThumb}" alt="${meal.strMeal}">
-                        <h3>${meal.strMeal}</h3>
-                        <p><strong>Category:</strong> ${meal.strCategory}</p>
-                        <p><strong>Origin:</strong> ${meal.strArea}</p>
-                    </div>
-                `).join("");
-
-            } catch (error) {
-                // Handle error state
-                status.textContent = "An error occurred. Please try again later.";
-                console.error(error);
-            }
+        } catch (error) {
+            // This is what you are seeing now. 
+            // Logging the error to the console helps find the exact cause.
+            status.textContent = "An error occurred. Please check your connection.";
+            console.error("API Error Detail:", error);
         }
-    </script>
+    }
+</script>
 </body>
 </html>
