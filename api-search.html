@@ -51,7 +51,8 @@
     <footer>
         <p>&copy; 2026 Nermeen Bolous. All rights reserved.</p>
     </footer>
-<script>
+
+     <script>
     const searchBtn = document.getElementById("searchBtn");
     const searchInput = document.getElementById("searchInput");
     const status = document.getElementById("status");
@@ -59,53 +60,36 @@
 
     searchBtn.addEventListener("click", runSearch);
 
-    // Allow the user to press 'Enter' to search
-    searchInput.addEventListener("keypress", (e) => {
-        if (e.key === "Enter") runSearch();
-    });
-
     async function runSearch() {
         const term = searchInput.value.trim();
-
         if (!term) {
             status.textContent = "Please enter a search term.";
-            results.innerHTML = "";
             return;
         }
 
-        status.textContent = "Connecting to recipe database...";
+        status.textContent = "Connecting to database...";
         results.innerHTML = "";
 
+        // We use a CORS proxy to help GitHub Pages talk to the API
+        const proxy = "https://corsproxy.io/?";
+        const apiTarget = `https://www.themealdb.com/api/json/v1/1/search.php?s=${encodeURIComponent(term)}`;
+        
         try {
-            // Using a timestamp (?t=) helps bypass some browser security/cache blocks
-            
-            const url = `https://www.themealdb.com/api/json/v1/1/search.php?s=${encodeURIComponent(term)}`;
+            const response = await fetch(proxy + apiTarget);
 
-           
-            const response = await fetch(apiURL, {
-                method: 'GET',
-                headers: {
-                    'Accept': 'application/json'
-                }
-            });
-
-            if (!response.ok) {
-                throw new Error("Network response was not ok");
-            }
+            if (!response.ok) throw new Error("Connection failed");
 
             const data = await response.json();
 
             if (!data.meals) {
-                status.textContent = "No recipes found. Try searching for 'Chicken' or 'Pizza'.";
+                status.textContent = "No results. Try 'Chicken' or 'Pizza'.";
                 return;
             }
 
-            status.textContent = `Success! Found ${data.meals.length} result(s).`;
-
-            // Display Name, Category, Region, and Image
+            status.textContent = `Found ${data.meals.length} result(s).`;
             results.innerHTML = data.meals.map(meal => `
                 <div class="recipe-card">
-                    <img src="${meal.strMealThumb}" alt="${meal.strMeal}" loading="lazy">
+                    <img src="${meal.strMealThumb}" alt="${meal.strMeal}">
                     <h3>${meal.strMeal}</h3>
                     <p><strong>Category:</strong> ${meal.strCategory}</p>
                     <p><strong>Region:</strong> ${meal.strArea}</p>
@@ -113,10 +97,11 @@
             `).join("");
 
         } catch (error) {
-            status.textContent = "Connection blocked by browser. Check your internet or ad-blocker.";
-            console.error("Technical Detail:", error);
+            status.textContent = "The browser is still blocking the data. Try searching in an Incognito window.";
+            console.error("Technical Error:", error);
         }
     }
-</script>
+</script>  
+         
 </body>
 </html>
