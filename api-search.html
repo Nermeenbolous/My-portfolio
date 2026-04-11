@@ -51,14 +51,18 @@
     <footer>
         <p>&copy; 2026 Nermeen Bolous. All rights reserved.</p>
     </footer>
-
-    <script>
+<script>
     const searchBtn = document.getElementById("searchBtn");
     const searchInput = document.getElementById("searchInput");
     const status = document.getElementById("status");
     const results = document.getElementById("results");
 
     searchBtn.addEventListener("click", runSearch);
+
+    // Allow the user to press 'Enter' to search
+    searchInput.addEventListener("keypress", (e) => {
+        if (e.key === "Enter") runSearch();
+    });
 
     async function runSearch() {
         const term = searchInput.value.trim();
@@ -69,32 +73,37 @@
             return;
         }
 
-        status.textContent = "Connecting to database...";
+        status.textContent = "Connecting to recipe database...";
         results.innerHTML = "";
 
         try {
-            // Using a CORS proxy can sometimes bypass browser security blocks on GitHub Pages
-            const apiURL = `https://www.themealdb.com/api/json/v1/1/search.php?s=${encodeURIComponent(term)}`;
+            // Using a timestamp (?t=) helps bypass some browser security/cache blocks
+            const apiURL = `https://www.themealdb.com/api/json/v1/1/search.php?s=${encodeURIComponent(term)}&t=${Date.now()}`;
             
-            // Standard fetch with a 'cors' mode request
-            const response = await fetch(apiURL, { mode: 'cors' });
+            const response = await fetch(apiURL, {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json'
+                }
+            });
 
             if (!response.ok) {
-                throw new Error("API Network Response Failed");
+                throw new Error("Network response was not ok");
             }
 
             const data = await response.json();
 
             if (!data.meals) {
-                status.textContent = "No recipes found. Try searching for 'Chicken'.";
+                status.textContent = "No recipes found. Try searching for 'Chicken' or 'Pizza'.";
                 return;
             }
 
-            status.textContent = `Success! Found ${data.meals.length} recipes.`;
+            status.textContent = `Success! Found ${data.meals.length} result(s).`;
 
+            // Display Name, Category, Region, and Image
             results.innerHTML = data.meals.map(meal => `
                 <div class="recipe-card">
-                    <img src="${meal.strMealThumb}" alt="${meal.strMeal}">
+                    <img src="${meal.strMealThumb}" alt="${meal.strMeal}" loading="lazy">
                     <h3>${meal.strMeal}</h3>
                     <p><strong>Category:</strong> ${meal.strCategory}</p>
                     <p><strong>Region:</strong> ${meal.strArea}</p>
@@ -102,9 +111,8 @@
             `).join("");
 
         } catch (error) {
-            // This displays exactly what the browser is complaining about
-            status.textContent = "Security block or connection error. Check browser console.";
-            console.error("Technical Error Detail:", error);
+            status.textContent = "Connection blocked by browser. Check your internet or ad-blocker.";
+            console.error("Technical Detail:", error);
         }
     }
 </script>
